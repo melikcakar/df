@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/assets/emblem_fallen.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Divinity Fallen | Interactive WebGL Experience</title>
+    <meta name="description" content="Immerse yourself in Divinity Fallen, a dark fantasy universe of corrupted divine power, gothic ruins, and cosmic battlegrounds. Explore the factions, adjust the corruption, and witness the WebGL interactive showcase." />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Inter:wght@300;400;500;600;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Preloader Overlay -->
+    <div id="preloader" class="preloader" style="background: transparent; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+      <div class="preloader-bg-wrapper">
+        <img class="preloader-bg" src="/sahne1_opt.jpg" alt="Preloader Background" />
+        <div class="preloader-overlay"></div>
+      </div>
+      <div class="preloader-content">
+        <!-- Logo inside Preloader -->
+        <div class="logo-container preloader-logo">
+          <span class="logo-icon">✝</span>
+          <div class="logo-text">DIVINITY FALLEN</div>
+        </div>
+        
+        <div class="loader-bar-container" style="margin-top: 30px;">
+          <div class="loader-bar-fill" id="loader-bar-fill"></div>
+        </div>
+        <div id="preloader-percent" class="loader-percentage">0%</div>
+        <button id="preloader-enter-btn" class="enter-btn hidden" style="margin-top: 30px;">EVRENE GİRİŞ YAP</button>
+      </div>
+    </div>
+
+    <!-- WebGL Canvas Background -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Model Loader Overlay (GLTF loading progress) -->
+    <div id="model-loader" class="model-loader hidden">
+      <div class="model-loader-content">
+        <div class="loader-spinner"></div>
+        <div class="loader-status">ŞAMPİYON AÇIĞA ÇIKARILIYOR...</div>
+        <div class="loader-progress-bar"><div id="model-progress-fill" class="progress-fill"></div></div>
+        <div id="model-progress-percent" class="loader-percent">0%</div>
+      </div>
+    </div>
+
+    <!-- Main HUD Container -->
+    <main id="hud" class="hud">
+      <!-- Top Navigation -->
+      <header class="hud-header">
+        <div class="logo-container">
+          <span class="logo-icon">✝</span>
+          <h1 class="logo-text">DIVINITY FALLEN</h1>
+        </div>
+        
+        <div class="header-controls">
+          <button class="control-btn" id="audio-toggle">
+            <svg class="audio-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path class="wave wave-1" d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              <path class="wave wave-2" d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+            <span class="control-text">SES KAPALI</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Center Scene Interactive Vignette -->
+      <div id="central-prompt" class="central-prompt">
+        <span class="prompt-arrow">✦</span> Döndürmek için sürükleyin | Yakınlaştırmak için kaydırın
+      </div>
+
+      <!-- Left Panel: Faction Details / Weathered Manuscript -->
+      <section class="panel panel-left" id="faction-panel">
+        <button class="panel-close-btn" id="close-left-panel" aria-label="Kapat">&times;</button>
+        <div class="panel-border-glow" id="panel-glow"></div>
+        <div class="panel-content">
+          <div class="universe-lore">
+            <span class="universe-title-accent">✦ HARAP TAPINAK ARŞİVLERİ ✦</span>
+            <h2 class="universe-title">EVRENİN HİKAYESİ</h2>
+            <hr class="gothic-divider" />
+            <div class="universe-text">
+              <p>Yüzyıllar boyunca dünya, göklerden gelen kutsal varlıklar tarafından korunuyordu.</p>
+              <p>İnsanlar hastalıkları iyileştiriyor, savaşları sona erdiriyor ve medeniyetlerini tanrıların rehberliğinde inşa ediyorlardı. Dev katedraller gökyüzüne yükseliyor, kutsal tarikatlar dünyanın dört bir yanında hüküm sürüyordu.</p>
+              <p>Bu dönem tarihe <em>The Age of Light</em> olarak geçti.</p>
+              <p>Ancak kutsallığın ardında saklanan bir gerçek vardı. İnsanlığın ibadet ettiği güçler sonsuz değildi.</p>
+              <p>Bir gün gökyüzü sessizleşti. Dualar cevapsız kaldı. Kutsal enerjiler değişmeye başladı.</p>
+              <p>İnsanları iyileştiren ışık bedenleri parçalamaya, zihinleri dönüştürmeye ve canlıları korkunç yaratıklara çevirmeye başladı.</p>
+              <p>Azizler canavarlara dönüştü. Melekler şekillerini kaybetti. Tapınaklar çöktü.</p>
+              <p>Ve dünya o günü tek bir isimle hatırladı:</p>
+              <h3 class="universe-subtitle-accent">THE FALLING</h3>
+              <p>Bu olaydan sonra insanlık üçe bölündü.</p>
+              <p>Bazıları hâlâ kutsallığın kurtuluş olduğuna inanıyordu. Bazıları tanrıların insanlığı kandırdığını savunuyordu. Bazıları ise dönüşümün kurbanı olmuştu.</p>
+              <p>Şimdi dünya, inanç ile gerçek arasında parçalanmış halde son günlerini yaşamaktadır.</p>
+              <p>Ve herkes aynı sorunun cevabını aramaktadır:</p>
+              <p class="universe-question"><em>"Tanrılar mı düştü, yoksa onları anlayan insanlar mı?"</em></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Character Lore Details -->
+      <section class="panel panel-right" id="character-panel">
+        <button class="panel-close-btn" id="close-right-panel" aria-label="Kapat">&times;</button>
+        <div class="panel-border-glow" id="char-panel-glow"></div>
+        <div class="panel-content">
+          <div class="character-view">
+            <span class="character-title-accent">✦ ŞAMPİYONUN HİKAYESİ ✦</span>
+            <h2 class="character-name" id="char-name">Seraphiel</h2>
+            <span class="character-subtitle" id="char-title">The Choir of the Fallen</span>
+            <hr class="gothic-divider" />
+            <div class="character-lore" id="char-lore">
+              <p>Bir zamanlar göklerin en yüce kutsal varlığıydı.</p>
+              <p>The Falling sırasında yüzlerce kutsal ruh onun bedeninde birleşti.</p>
+              <p>Artık tek bir varlık değil.</p>
+              <p>Binlerce sesin aynı anda konuştuğu yaşayan bir ilahi.</p>
+              <p>Dünyadaki tüm yozlaşmanın kaynağı olduğu söylenir.</p>
+            </div>
+            <div class="character-attributes">
+              <div class="attr-row">
+                <span class="attr-name">Temsil Ettiği Kavram</span>
+                <span class="attr-val" id="char-concept">Çürümüş İlahilik</span>
+              </div>
+              <div class="attr-quote">
+                <p id="char-slogan">"We were the voice of heaven. Now we are its echo."</p>
+              </div>
+            </div>
+            <div class="character-purchase-action" style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 15px;">
+              <button class="btn btn-primary" id="buy-model-btn" style="width: 100%; font-size: 11px; letter-spacing: 0.15em; box-shadow: 0 0 15px var(--color-active-glow);">
+                3D MODELİ SATIN AL
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mobile HUD Toggles (Only visible on mobile) -->
+      <div class="mobile-hud-toggles" id="mobile-hud-toggles">
+        <button class="mobile-toggle-btn" id="mobile-toggle-left">
+          <span class="btn-icon">📜</span> HİKAYE
+        </button>
+        <button class="mobile-toggle-btn" id="mobile-toggle-right">
+          <span class="btn-icon">🛡️</span> DETAYLAR
+        </button>
+      </div>
+ 
+      <!-- Champion Selector Carousel -->
+      <section class="champion-selector-container" id="champion-selector-container">
+
+        <div class="champion-carousel" id="champion-carousel">
+          <button class="champion-card" data-champion="auren" data-faction="order">
+            <span class="card-glow"></span>
+            <div class="card-name">Auren</div>
+            <div class="card-faction">Umut</div>
+          </button>
+          <button class="champion-card" data-champion="elias" data-faction="order">
+            <span class="card-glow"></span>
+            <div class="card-name">Lyra</div>
+            <div class="card-faction">Dönüşüm</div>
+          </button>
+          <button class="champion-card" data-champion="eron" data-faction="heretics">
+            <span class="card-glow"></span>
+            <div class="card-name">Vesper</div>
+            <div class="card-faction">Gerçek</div>
+          </button>
+          <button class="champion-card" data-champion="executioner" data-faction="heretics">
+            <span class="card-glow"></span>
+            <div class="card-name">Cain</div>
+            <div class="card-faction">Adalet</div>
+          </button>
+          <button class="champion-card" data-champion="orion" data-faction="fallen">
+            <span class="card-glow"></span>
+            <div class="card-name">Orion</div>
+            <div class="card-faction">Bilgi</div>
+          </button>
+          <button class="champion-card" data-champion="raven" data-faction="fallen">
+            <span class="card-glow"></span>
+            <div class="card-name">Raven</div>
+            <div class="card-faction">İnsanlık</div>
+          </button>
+          <button class="champion-card active" data-champion="solarius" data-faction="order">
+            <span class="card-glow"></span>
+            <div class="card-name">Seraphiel</div>
+            <div class="card-faction">Çürümüş İlahilik</div>
+          </button>
+          <button class="champion-card" data-champion="throg" data-faction="heretics">
+            <span class="card-glow"></span>
+            <div class="card-name">Throg</div>
+            <div class="card-faction">Çürüme</div>
+          </button>
+        </div>
+      </section>
+
+      <!-- Bottom Bar -->
+      <footer class="hud-footer">
+        <div class="footer-left"></div>
+        <div class="scroll-indicator">
+          <span class="scroll-text" id="scroll-prompt-text">DÜŞMÜŞLER İLE ETKİLEŞİME GİR</span>
+          <div class="scroll-mouse">
+            <span class="mouse-wheel"></span>
+          </div>
+        </div>
+        <div class="footer-right"></div>
+      </footer>
+    </main>
+
+    <!-- Purchase Modal Overlay (Hidden by default) -->
+    <div id="purchase-modal" class="modal hidden">
+      <div class="modal-overlay" id="purchase-overlay"></div>
+      <div class="purchase-wrapper">
+        <button id="purchase-close" class="modal-close-btn">&times;</button>
+        <div class="modal-border-glow"></div>
+        <div class="purchase-container">
+          <!-- Left: Image Showcase & Technical Info -->
+          <div class="purchase-left">
+            <div class="purchase-image-frame">
+              <div class="purchase-image-glow"></div>
+              <img id="purchase-char-img" src="/assets/seraphiel_miniature.png" alt="3D Model Miniature Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;" />
+            </div>
+            <div class="purchase-specifications">
+              <span class="spec-title">✦ MODEL DETAYLARI ✦</span>
+              <div class="spec-grid">
+                <div class="spec-item"><span class="spec-lbl">Ölçek:</span><span class="spec-val">1:10 (75mm)</span></div>
+                <div class="spec-item"><span class="spec-lbl">Formatlar:</span><span class="spec-val">.STL, .OBJ, .FBX</span></div>
+                <div class="spec-item"><span class="spec-lbl">Poligon:</span><span class="spec-val">2.4M (High-Poly)</span></div>
+                <div class="spec-item"><span class="spec-lbl">Destek:</span><span class="spec-val">Pre-Supported</span></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right: Purchase Details & Form -->
+          <div class="purchase-right">
+            <span class="purchase-faction-tag" id="purchase-char-faction">KUTSAL SAVUNUCULAR</span>
+            <h2 class="purchase-title" id="purchase-char-name">SERAPHIEL</h2>
+            <span class="purchase-subtitle" id="purchase-char-title">The Choir of the Fallen</span>
+            
+            <hr class="gothic-divider" style="margin: 12px 0 18px 0;" />
+            
+            <!-- Price Card Options -->
+            <div class="purchase-pricing-options">
+              <div class="pricing-card active" data-type="digital">
+                <div class="pricing-card-content">
+                  <span class="pricing-option-name">DİJİTAL STL LİSANSI</span>
+                  <p class="pricing-option-desc">3B yazıcılar için optimize edilmiş dosya seti. Ömür boyu kişisel lisans.</p>
+                  <span class="pricing-price" id="digital-price">750 TL</span>
+                </div>
+              </div>
+              <div class="pricing-card" data-type="physical">
+                <div class="pricing-card-content">
+                  <span class="pricing-option-name">FİZİKSEL 3B BASKI (REÇİNE)</span>
+                  <p class="pricing-option-desc">Ultra detaylı gri reçine baskı. Destekleri temizlenmiş, boyamaya hazır.</p>
+                  <span class="pricing-price" id="physical-price">2.250 TL</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Order Form -->
+            <form id="purchase-form" class="purchase-form">
+              <div class="form-group">
+                <label for="purchase-name">ADINIZ SOYADINIZ</label>
+                <input type="text" id="purchase-name" required placeholder="Örn: Eldarion Stormcaller" />
+              </div>
+              <div class="form-group">
+                <label for="purchase-email">E-POSTA ADRESİNİZ</label>
+                <input type="email" id="purchase-email" required placeholder="Örn: eldarion@silvercrest.com" />
+              </div>
+              <div class="form-group address-group hidden" id="address-container">
+                <label for="purchase-address">TESLİMAT ADRESİ</label>
+                <textarea id="purchase-address" placeholder="Kargo teslimatı için detaylı adresinizi giriniz..." rows="2"></textarea>
+              </div>
+              
+              <button type="submit" class="btn btn-primary" id="submit-purchase-btn" style="margin-top: 15px; width: 100%;">
+                SİPARİŞİ TAMAMLA VE ÖDEME ADIMINA GEÇ
+              </button>
+            </form>
+            
+            <!-- Success Screen (Hidden by default) -->
+            <div id="purchase-success" class="purchase-success-view hidden">
+              <span class="success-icon">✦</span>
+              <h3>SİPARİŞİNİZ ALINDI</h3>
+              <p id="success-message">Model indirme bağlantısı <strong>email@example.com</strong> adresine gönderildi.</p>
+              <hr class="gothic-divider" style="margin: 20px 0;" />
+              <button type="button" class="btn btn-secondary" id="success-close-btn" style="width: 100%;">GALERİYE DÖN</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <audio id="ambient-audio" loop preload="auto">
+      <!-- Dark ambient synth stream or high-quality background sound link -->
+      <source src="https://soundimage.org/wp-content/uploads/2017/12/Kingdom-of-Darkness.mp3" type="audio/mp3">
+    </audio>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
