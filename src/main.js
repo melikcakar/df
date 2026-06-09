@@ -315,28 +315,58 @@ function loadChampion(championName, showOverlay = true) {
   // Update right side character info panel
   updateCharacterPanel(championName);
   
+  let progressObj = { value: 0 };
+  let progressTween = null;
+  
   if (showOverlay && modelLoaderOverlay) {
     modelLoaderOverlay.classList.remove('hidden');
     if (modelProgressFill) modelProgressFill.style.width = '0%';
     if (modelProgressPercent) modelProgressPercent.innerText = '0%';
     const loaderStatus = modelLoaderOverlay.querySelector('.loader-status');
     if (loaderStatus) loaderStatus.innerText = `${championName.toUpperCase()} AÇIĞA ÇIKARILIYOR...`;
+    
+    // Start adaptive progress tween for champion switcher overlay
+    progressTween = gsap.to(progressObj, {
+      value: 90,
+      duration: 3.5,
+      ease: "power1.out",
+      onUpdate: () => {
+        const displayVal = Math.floor(progressObj.value);
+        if (modelProgressFill) modelProgressFill.style.width = `${displayVal}%`;
+        if (modelProgressPercent) modelProgressPercent.innerText = `${displayVal}%`;
+      }
+    });
+  } else {
+    // Start adaptive progress tween for initial preloader
+    if (preloaderBarFill) preloaderBarFill.style.width = '0%';
+    if (preloaderPercent) preloaderPercent.innerText = '0%';
+    
+    progressTween = gsap.to(progressObj, {
+      value: 90,
+      duration: 5.0,
+      ease: "power1.out",
+      onUpdate: () => {
+        const displayVal = Math.floor(progressObj.value);
+        if (preloaderBarFill) preloaderBarFill.style.width = `${displayVal}%`;
+        if (preloaderPercent) preloaderPercent.innerText = `${displayVal}%`;
+      }
+    });
   }
   
   modelLoader.loadModel(
     championName,
     (percent) => {
-      if (showOverlay) {
-        if (modelProgressFill) modelProgressFill.style.width = `${percent}%`;
-        if (modelProgressPercent) modelProgressPercent.innerText = `${percent}%`;
-      } else {
-        initialModelProgress = percent;
-        // Update preloader progress bar
-        if (preloaderBarFill) preloaderBarFill.style.width = `${percent}%`;
-        // Update preloader percentage text
-        if (preloaderPercent) preloaderPercent.innerText = `${percent}%`;
-        
-        // Keep preloader fully opaque during background loading.
+      // If we get an actual progress from server, sync the tween
+      if (percent > progressObj.value) {
+        if (progressTween) progressTween.kill();
+        progressObj.value = percent;
+        if (showOverlay) {
+          if (modelProgressFill) modelProgressFill.style.width = `${percent}%`;
+          if (modelProgressPercent) modelProgressPercent.innerText = `${percent}%`;
+        } else {
+          if (preloaderBarFill) preloaderBarFill.style.width = `${percent}%`;
+          if (preloaderPercent) preloaderPercent.innerText = `${percent}%`;
+        }
       }
     },
     (error) => {
@@ -344,60 +374,80 @@ function loadChampion(championName, showOverlay = true) {
         console.warn(`Failed to load GLTF model ${championName}:`, error);
       }
       
-      if (showOverlay) {
-        // Small delay for smooth exit transition
-        setTimeout(() => {
-          if (modelLoaderOverlay) modelLoaderOverlay.classList.add('hidden');
-        }, 300);
-      } else {
-        isInitialModelLoaded = true;
-        initialModelProgress = 100;
-        
-        // Show the Enter button with animation when initial load is complete
-        const preloaderEnterBtn = document.getElementById('preloader-enter-btn');
-        if (preloaderEnterBtn) {
-          preloaderEnterBtn.classList.remove('hidden');
-          gsap.fromTo(preloaderEnterBtn, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" });
-          
-          preloaderEnterBtn.addEventListener('click', () => {
-            // Play background music immediately as user enters the page
-            toggleAudio(true);
+      if (progressTween) progressTween.kill();
+      
+      // Animate progress to 100% immediately
+      gsap.to(progressObj, {
+        value: 100,
+        duration: 0.4,
+        ease: "power2.out",
+        onUpdate: () => {
+          const displayVal = Math.floor(progressObj.value);
+          if (showOverlay) {
+            if (modelProgressFill) modelProgressFill.style.width = `${displayVal}%`;
+            if (modelProgressPercent) modelProgressPercent.innerText = `${displayVal}%`;
+          } else {
+            if (preloaderBarFill) preloaderBarFill.style.width = `${displayVal}%`;
+            if (preloaderPercent) preloaderPercent.innerText = `${displayVal}%`;
+          }
+        },
+        onComplete: () => {
+          if (showOverlay) {
+            // Small delay for smooth exit transition
+            setTimeout(() => {
+              if (modelLoaderOverlay) modelLoaderOverlay.classList.add('hidden');
+            }, 300);
+          } else {
+            isInitialModelLoaded = true;
+            initialModelProgress = 100;
             
-            // Fade out preloader smoothly with backdrop blur fading as well
-            gsap.to(preloader, {
-              opacity: 0,
-              backdropFilter: "blur(0px)",
-              WebkitBackdropFilter: "blur(0px)",
-              duration: 1.2,
-              ease: "power2.out",
-              onComplete: () => {
+            // Show the Enter button with animation when initial load is complete
+            const preloaderEnterBtn = document.getElementById('preloader-enter-btn');
+            if (preloaderEnterBtn) {
+              preloaderEnterBtn.classList.remove('hidden');
+              gsap.fromTo(preloaderEnterBtn, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" });
+              
+              preloaderEnterBtn.addEventListener('click', () => {
+                // Play background music immediately as user enters the page
+                toggleAudio(true);
+                
+                // Fade out preloader smoothly with backdrop blur fading as well
+                gsap.to(preloader, {
+                  opacity: 0,
+                  backdropFilter: "blur(0px)",
+                  WebkitBackdropFilter: "blur(0px)",
+                  duration: 1.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    preloader.style.display = 'none';
+                    
+                    // Slide in HUD components immediately after preloader fades out
+                    gsap.fromTo('.hud-header', { y: -50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power2.out" });
+                    
+                    if (window.innerWidth > 900) {
+                      gsap.fromTo('.panel-left', { x: -100, opacity: 0 }, { x: 0, opacity: 1, duration: 1.2, delay: 0.2, ease: "power2.out" });
+                      gsap.fromTo('.panel-right', { x: 100, opacity: 0 }, { x: 0, opacity: 1, duration: 1.2, delay: 0.2, ease: "power2.out" });
+                    } else {
+                      gsap.set('.panel-left', { clearProps: 'all' });
+                      gsap.set('.panel-right', { clearProps: 'all' });
+                      // Slide in the mobile HUD toggles row instead
+                      gsap.fromTo('.mobile-hud-toggles', { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, delay: 0.2, ease: "power2.out" });
+                    }
+                    
+                    gsap.fromTo('.champion-selector-container', { y: 100, opacity: 0 }, { y: 0, opacity: 1, duration: 1.2, delay: 0.3, ease: "power2.out" });
+                    gsap.fromTo('.hud-footer', { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, delay: 0.4, ease: "power2.out" });
+                  }
+                });
+              }, { once: true });
+            } else {
+              // Fallback if the button is missing
+              if (preloader) {
                 preloader.style.display = 'none';
-                
-                // Slide in HUD components immediately after preloader fades out
-                gsap.fromTo('.hud-header', { y: -50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power2.out" });
-                
-                if (window.innerWidth > 900) {
-                  gsap.fromTo('.panel-left', { x: -100, opacity: 0 }, { x: 0, opacity: 1, duration: 1.2, delay: 0.2, ease: "power2.out" });
-                  gsap.fromTo('.panel-right', { x: 100, opacity: 0 }, { x: 0, opacity: 1, duration: 1.2, delay: 0.2, ease: "power2.out" });
-                } else {
-                  gsap.set('.panel-left', { clearProps: 'all' });
-                  gsap.set('.panel-right', { clearProps: 'all' });
-                  // Slide in the mobile HUD toggles row instead
-                  gsap.fromTo('.mobile-hud-toggles', { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, delay: 0.2, ease: "power2.out" });
-                }
-                
-                gsap.fromTo('.champion-selector-container', { y: 100, opacity: 0 }, { y: 0, opacity: 1, duration: 1.2, delay: 0.3, ease: "power2.out" });
-                gsap.fromTo('.hud-footer', { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, delay: 0.4, ease: "power2.out" });
               }
-            });
-          }, { once: true });
-        } else {
-          // Fallback if the button is missing
-          if (preloader) {
-            preloader.style.display = 'none';
+            }
           }
         }
-      }
+      });
       
       // Update camera positioning based on the loaded champion (center Solarius)
       updateCameraForChampion(championName);

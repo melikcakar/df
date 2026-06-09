@@ -2,6 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      window.addEventListener('error', function(e) {
+        var errDiv = document.createElement('div');
+        errDiv.style.position = 'fixed';
+        errDiv.style.top = '10px';
+        errDiv.style.left = '10px';
+        errDiv.style.background = 'rgba(255,0,0,0.95)';
+        errDiv.style.color = '#fff';
+        errDiv.style.padding = '20px';
+        errDiv.style.zIndex = '999999';
+        errDiv.style.fontFamily = 'monospace';
+        errDiv.style.fontSize = '12px';
+        errDiv.style.maxWidth = '90vw';
+        errDiv.style.maxHeight = '90vh';
+        errDiv.style.overflow = 'auto';
+        errDiv.style.whiteSpace = 'pre-wrap';
+        errDiv.style.border = '2px solid white';
+        errDiv.innerText = 'JS Hata: ' + e.message + '\nDosya: ' + e.filename + ':' + e.lineno + ':' + e.colno + '\nStack: ' + (e.error ? e.error.stack : 'N/A');
+        document.body.appendChild(errDiv);
+      });
+    </script>
     <link rel="icon" type="image/png" href="/assets/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Divinity Fallen | Interactive WebGL Experience</title>

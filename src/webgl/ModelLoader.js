@@ -118,68 +118,74 @@ export class ModelShowcaseLoader {
     // Access models from /public directory directly
     const url = `/${modelName}.glb`;
     
-    this.loader.load(
-      url,
-      (gltf) => {
-        const model = gltf.scene;
-        this.currentModel = model;
-        this.group.add(model);
-        
-        // Auto scale and center mesh inside local group
-        this.autoScaleAndCenter(model, modelName);
+    MeshoptDecoder.ready.then(() => {
+      this.loader.load(
+        url,
+        (gltf) => {
+          const model = gltf.scene;
+          this.currentModel = model;
+          this.group.add(model);
+          
+          // Auto scale and center mesh inside local group
+          this.autoScaleAndCenter(model, modelName);
 
-        // Apply custom Y-offset to align ground standing points for Vesper & Cain
-        if (modelName === 'eron') {
-          model.position.y += -0.2; // Lower Vesper
-        } else if (modelName === 'executioner') {
-          model.position.y += -0.2; // Lower Cain
-        }
-        
-        // Traverse to set shadows and update custom shaders/materials
-        model.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            
-            // Keep original material colors intact - no overrides
+          // Apply custom Y-offset to align ground standing points for Vesper & Cain
+          if (modelName === 'eron') {
+            model.position.y += -0.2; // Lower Vesper
+          } else if (modelName === 'executioner') {
+            model.position.y += -0.2; // Lower Cain
           }
-        });
-        
-        // Setup starting position for entry animation (start 1.5 units lower in local space)
-        const targetY = model.position.y;
-        model.position.y = targetY - 1.5;
-        
-        // Rise transition
-        gsap.to(model.position, {
-          y: targetY,
-          duration: 1.2,
-          ease: "power3.out"
-        });
-        
-        // Animations Setup using Three.js AnimationMixer
-        if (gltf.animations && gltf.animations.length > 0) {
-          this.mixer = new THREE.AnimationMixer(model);
-          // Play first clip (typically Idle/Default action)
-          const clip = gltf.animations[0];
-          this.activeAction = this.mixer.clipAction(clip);
-          this.activeAction.play();
+          
+          // Traverse to set shadows and update custom shaders/materials
+          model.traverse((child) => {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+              
+              // Keep original material colors intact - no overrides
+            }
+          });
+          
+          // Setup starting position for entry animation (start 1.5 units lower in local space)
+          const targetY = model.position.y;
+          model.position.y = targetY - 1.5;
+          
+          // Rise transition
+          gsap.to(model.position, {
+            y: targetY,
+            duration: 1.2,
+            ease: "power3.out"
+          });
+          
+          // Animations Setup using Three.js AnimationMixer
+          if (gltf.animations && gltf.animations.length > 0) {
+            this.mixer = new THREE.AnimationMixer(model);
+            // Play first clip (typically Idle/Default action)
+            const clip = gltf.animations[0];
+            this.activeAction = this.mixer.clipAction(clip);
+            this.activeAction.play();
+          }
+          
+          this.isLoading = false;
+          if (onLoadComplete) onLoadComplete();
+        },
+        (xhr) => {
+          if (xhr.total > 0) {
+            const percent = Math.floor((xhr.loaded / xhr.total) * 100);
+            if (onProgress) onProgress(percent);
+          }
+        },
+        (error) => {
+          console.error(`Error loading GLTF model ${modelName}:`, error);
+          this.isLoading = false;
+          if (onLoadComplete) onLoadComplete(error);
         }
-        
-        this.isLoading = false;
-        if (onLoadComplete) onLoadComplete();
-      },
-      (xhr) => {
-        if (xhr.total > 0) {
-          const percent = Math.floor((xhr.loaded / xhr.total) * 100);
-          if (onProgress) onProgress(percent);
-        }
-      },
-      (error) => {
-        console.error(`Error loading GLTF model ${modelName}:`, error);
-        this.isLoading = false;
-        if (onLoadComplete) onLoadComplete(error);
-      }
-    );
+      );
+    }).catch((err) => {
+      console.error("MeshoptDecoder failed to initialize:", err);
+      this.isLoading = false;
+      if (onLoadComplete) onLoadComplete(err);
+    });
   }
   
   autoScaleAndCenter(model, modelName) {
