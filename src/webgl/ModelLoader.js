@@ -6,6 +6,7 @@ import { gsap } from 'gsap';
 export class ModelShowcaseLoader {
   constructor(engine) {
     this.engine = engine;
+    this.engine.modelLoader = this;
     this.loader = new GLTFLoader();
     this.loader.setMeshoptDecoder(MeshoptDecoder);
     this.group = new THREE.Group();

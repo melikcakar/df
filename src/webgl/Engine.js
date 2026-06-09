@@ -29,6 +29,7 @@ export class WebGLEngine {
     // Custom animate callback
     this.updatables = [];
     this.captureFrameCallback = null;
+    this.modelLoader = null;
 
     this.init();
   }
@@ -380,7 +381,7 @@ export class WebGLEngine {
 
   onMouseUp(event) {
     this.isDragging = false;
-    const modelLoader = this.updatables.find(obj => obj.constructor.name === 'ModelShowcaseLoader');
+    const modelLoader = this.modelLoader;
     if (modelLoader) {
       modelLoader.isUserDragging = false;
     }
@@ -394,7 +395,7 @@ export class WebGLEngine {
       y: event.clientY - this.previousMousePosition.y
     };
 
-    const modelLoader = this.updatables.find(obj => obj.constructor.name === 'ModelShowcaseLoader');
+    const modelLoader = this.modelLoader;
     if (modelLoader && modelLoader.group) {
       // Scale horizontal drag to Y rotation, and vertical drag to X rotation
       modelLoader.group.rotation.y += deltaMove.x * 0.007;
@@ -425,7 +426,7 @@ export class WebGLEngine {
 
   onTouchEnd(event) {
     this.isDragging = false;
-    const modelLoader = this.updatables.find(obj => obj.constructor.name === 'ModelShowcaseLoader');
+    const modelLoader = this.modelLoader;
     if (modelLoader) {
       modelLoader.isUserDragging = false;
     }
@@ -439,7 +440,7 @@ export class WebGLEngine {
       y: event.touches[0].clientY - this.previousMousePosition.y
     };
 
-    const modelLoader = this.updatables.find(obj => obj.constructor.name === 'ModelShowcaseLoader');
+    const modelLoader = this.modelLoader;
     if (modelLoader && modelLoader.group) {
       modelLoader.group.rotation.y += deltaMove.x * 0.008;
       modelLoader.group.rotation.x += deltaMove.y * 0.008;
