@@ -78,9 +78,9 @@ export class WebGLEngine {
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
     window.addEventListener('mousemove', this.onMouseMoveDrag.bind(this));
 
-    this.canvas.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: true });
+    this.canvas.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
     window.addEventListener('touchend', this.onTouchEnd.bind(this));
-    window.addEventListener('touchmove', this.onTouchMoveDrag.bind(this), { passive: true });
+    window.addEventListener('touchmove', this.onTouchMoveDrag.bind(this), { passive: false });
   }
 
   generateHDRReflectionMap() {
@@ -434,6 +434,10 @@ export class WebGLEngine {
 
   onTouchMoveDrag(event) {
     if (!this.isDragging || event.touches.length === 0) return;
+
+    if (event.cancelable) {
+      event.preventDefault();
+    }
 
     const deltaMove = {
       x: event.touches[0].clientX - this.previousMousePosition.x,

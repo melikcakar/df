@@ -699,7 +699,7 @@ if (splitDragBar) {
   splitDragBar.addEventListener('touchstart', (e) => {
     isDragSeparatorActive = true;
     splitDragBar.classList.add('active');
-  }, { passive: true });
+  }, { passive: false });
 }
 
 window.addEventListener('touchend', () => {
@@ -712,11 +712,15 @@ window.addEventListener('touchend', () => {
 window.addEventListener('touchmove', (e) => {
   if (!isDragSeparatorActive || !isLoreMode || e.touches.length === 0) return;
   
+  if (e.cancelable) {
+    e.preventDefault();
+  }
+  
   let pct = e.touches[0].clientY / window.innerHeight;
   pct = Math.max(0.15, Math.min(0.85, pct));
   
   updateSplitLayout(pct);
-}, { passive: true });
+}, { passive: false });
 
 // Handle split resizing and WebGL clipping offset updates
 function updateSplitLayout(pct) {
