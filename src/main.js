@@ -367,7 +367,7 @@ function loadChampion(championName, showOverlay = true) {
             gsap.to(preloader, {
               opacity: 0,
               backdropFilter: "blur(0px)",
-              webkitBackdropFilter: "blur(0px)",
+              WebkitBackdropFilter: "blur(0px)",
               duration: 1.2,
               ease: "power2.out",
               onComplete: () => {
